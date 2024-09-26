@@ -19,10 +19,13 @@
   ～ Slime
   ～ Boss
 - FINAL
-  ～ Final 
+  ～ Final
+
 ### 分工： 
 will - char, fishing
 jihan - Mons-boss
 lin - wish
 feb - Shop
+
+### 变量：
 
