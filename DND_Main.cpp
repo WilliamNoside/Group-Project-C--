@@ -3,6 +3,8 @@
 # include <ctime>
 # include <chrono> 
 # include <thread> 
+# include <map>
+
 
 /*
 角色数据需要拥有HP和MP，金币Coins。 ✅
@@ -17,13 +19,59 @@
 目前进度
 */
 
+class Package{
+    private:
+        std::map<std::string, int> items;  // 物品名称,数量
+    public:
+
+        //添加物品
+        void addItem(const std::string & itemName, int quantity = 1){
+            items[itemName] += quantity;
+            std::cout << "你讲一个" << quantity << "个" << itemName << "收到了背包\n";
+        }
+
+        //移除物品
+        bool removeItem(const std::string & itemName, int quantity = 1){
+            if(items.count(itemName) && items[itemName] >= quantity){
+                items[itemName] -= quantity;
+                if (items[itemName] == 0){
+                    items.erase(itemName);
+                }
+                std::cout << "你使用了" << quantity << "个" << itemName << "!\n";
+                return true;
+            }else{
+                std::cout << "没有足够的" << itemName << "!\n";
+                return false;
+            }
+        }
+
+        //背包物品展示
+        void showPackage() const {
+            if (items.empty()){
+                std::cout << "你的背包里没有东西\n";
+            }else{
+                std::cout << "^^^^^^^^^^^^^^^^^^^\n";
+                std::cout << "背包内容:\n";
+                for(const auto & item : items){
+                    std::cout << item.first << " x " << item.second << "\n";
+                }
+            }
+        }
+
+        //物品检测
+        bool hasItem(const std::string& itemName, int quantity = 1) const {
+            return items.count(itemName) && items.at(itemName) >= quantity;
+        }
+};
+
 class Character{
     public:
         std::string Name; //名字
-        std::string Classname; //名字
+        std::string Classname; //职业
         int HP; //力量
         int MP; //智慧
         int Coins; //金币
+        Package package;//背包
         
         // 初始化角色数值，在定义怪物和初始角色时使用。
 
@@ -42,7 +90,83 @@ class Character{
             std::cout << "你的HP为" << HP << "，这决定了你的攻击力和生命值\n";
             std::cout << "你的MP为" << MP << "，这决定了你的法术伤害和法力值\n";
             std::cout << "你的金币数量为" << Coins << "，你可以使用金币来兑换商店的物品\n";
+            package.showPackage();  // 显示背包内容
         }
+
+        // 背包整合角色类
+
+        // 添加物品到背包
+        void addItemToPackage(const std::string & itemName, int quantity = 1) {
+            package.addItem(itemName, quantity);
+        }
+
+        // 移除物品
+        bool useItemFromPackage(const std::string & itemName, int quantity = 1) {
+            return package.removeItem(itemName, quantity);
+        }
+        
+        // 检查物品
+        bool hasItem(const std::string & itemName, int quantity = 1) const {
+            return package.hasItem(itemName, quantity);
+        }
+};
+
+class FishingRod{
+    public:
+        int maxDurability;//最大耐久度
+        int durability;//目前耐久度
+        int level;//钓鱼竿等级
+        int upgradeCost;//钓鱼竿花费
+        int rareChance;//稀有鱼几率
+
+        //初始化鱼竿设定
+        FishingRod(int maxDur,int rodLV,int cost,int rareChancePercent){
+            maxDurability = maxDur;
+            durability = maxDur;
+            level = rodLV;
+            upgradeCost = cost;
+            rareChance = rareChancePercent;
+        }
+
+        //鱼竿耐久度减少
+        void decreaseDurability() {
+            if (durability > 0) {
+                durability--;
+            }
+        }
+
+        //检测鱼竿是否报废
+        bool isBroken(){
+            return durability <= 0;
+        }
+
+        //修理钓竿
+        void repair(){
+            durability = maxDurability;
+            std::cout << "钓鱼竿已修复，耐久度恢复至 " << durability << '\n';
+        }
+        //
+        bool upgrade(Character &player){
+            if (player.Coins >= upgradeCost){
+                player.Coins -= upgradeCost;
+                level++;
+                maxDurability += 5;
+                rareChance += 5;
+                upgradeCost += 50;
+                repair();
+                std::cout << "钓鱼竿升级成功！等级提升至 " << level << "，新耐久度为 " << maxDurability << "，钓上鱼的几率提升了！\n";
+                return true;
+            }else {
+            std::cout << "金币不足，无法升级钓鱼竿。\n";
+            return false;
+            }
+        }
+
+        // 钓鱼竿状态显示
+        void showDurability() {
+        std::cout << "钓鱼竿等级: " << level << ",钓鱼竿耐久度: " << durability << "/" << maxDurability << '\n';
+    }
+    
 };
 
 Character playerCreateCharacter(){
@@ -65,13 +189,13 @@ Character playerCreateCharacter(){
     }else if (choice == 3) {
         return Character(playerName,"法师", 80 , 150 , 50); //法师拥有低力量 高智慧
     }else if (choice == 2) {
-        return Character(playerName,"游侠", 100 , 80 , 50); //游侠拥有中力量 中智慧
+        return Character(playerName,"游侠", 100 , 60 , 50); //游侠拥有中力量 中智慧
     }else {
         return Character(playerName,"商人", 80 , 30 , 300); //商人拥有中力量 低智慧
     }
 };
 
-std::string fishReward(){
+std::string fishReward(FishingRod &rod){
     const char* garbage[] = {"旧报纸" , "破眼镜" , "垃圾" , "可乐罐" , "破布"};
     const char* commonFish[] = {"金鱼" , "鲤鱼" , "鲈鱼" , "鲢鱼" , "草鱼"};
     const char* rareFish[] = {"大马哈鱼" , "金枪鱼" , "河豚"};
@@ -79,10 +203,10 @@ std::string fishReward(){
 
     int fishChance = rand() % 100;
 
-    if (fishChance < 20) {
+    if (fishChance < 30 - (rod.rareChance/5)) {
         int i = rand() % (sizeof(garbage) / sizeof(garbage[0]));
         return garbage[i];
-    }else if(fishChance < 70) {
+    }else if(fishChance < 80 - rod.rareChance) {
         int i = rand() % (sizeof(commonFish) / sizeof(commonFish[0]));
         return commonFish[i];
     }else if(fishChance < 95) {
@@ -93,11 +217,23 @@ std::string fishReward(){
         return treasure[i];}
 }
 
-void fishing (Character &player){
+void fishing (Character &player , FishingRod &rod){
     char choice;
+    //准备钓鱼
+    std::cout << player.Name << "来到了河边，准备钓鱼！\n ";
     do {
+
+        if(rod.isBroken()){
+            std::cout << "你的钓竿坏了，快去修修吧！";
+            break;
+        }
+
         //开始钓鱼
-        std::cout << player.Name << "来到了河边，开始钓鱼！\n ";
+        std::cout << "______________\n";
+        std::cout << "开始钓鱼！\n";
+        rod.decreaseDurability(); //耐久度减少
+        rod.showDurability(); //显示钓鱼竿数据
+
 
         //设置随机数，1-5秒后上钩
         int waitTime = rand() % 5 + 1 ;
@@ -124,7 +260,7 @@ void fishing (Character &player){
 
         //根据Success变量判断是否上钩
         if(success){
-            std::string fishResult = fishReward();
+            std::string fishResult = fishReward(rod);
             std::cout << "恭喜！你钓到了: " << fishResult << "！\n";
 
             //判定战利品，并给予奖励
@@ -136,33 +272,33 @@ void fishing (Character &player){
                 std::cout << "这是10年前的新闻啊！\n";
             }else if(fishResult == "金鱼"|| fishResult == "鲤鱼"){
                 std::cout << "小鱼也是鱼！\n";
-                player.Coins += 10;
+                player.addItemToPackage(fishResult); 
             }else if(fishResult == "鲈鱼"){
                 std::cout << "是鲈鱼不是鱼露\n";
-                player.Coins += 10;
+                player.addItemToPackage(fishResult); 
             }else if(fishResult == "鲢鱼"|| fishResult == "草鱼"){
                 std::cout << "钓鱼佬永不空军！\n";
-                player.Coins += 10;
+                player.addItemToPackage(fishResult); 
             }else if(fishResult == "大马哈鱼"|| fishResult == "金枪鱼"){
                 std::cout << "好大一条鱼！\n";
-                player.Coins += 50;
+                player.addItemToPackage(fishResult); 
             }else if(fishResult == "河豚"){
                 std::cout << "小心别被扎到了！\n";
-                player.Coins += 50;
+                player.addItemToPackage(fishResult); 
             }else if(fishResult == "宝藏箱"||fishResult == "古代项链"||fishResult == "金戒指"){
                 std::cout << "哇，发财！\n";
-                player.Coins += 100;
+                player.Coins += 200;
             }else{
             std::cout << "哎呀，鱼跑掉了！\n";
         }
     }
         //继续钓鱼判定
-        std::cout << "是否继续钓鱼？(y/n): ";
+        std::cout << "是否继续钓鱼？(y/n): \n";
         std::cin >> choice;
     }while (choice == 'y' || choice == 'Y');
 }
 
-void town (Character &player){
+void town (Character &player , FishingRod &rod){
     int move;
     do{
         std::cout << "++++++++++++++++++++\n";
@@ -172,7 +308,7 @@ void town (Character &player){
         std::cout << "2.钓鱼\n";
         std::cout << "3.前去郊外\n";
         std::cout << "4.许愿\n";
-        std::cout << "5.查看目前状态\n";
+        std::cout << "5.查看背包和状态\n";
         std::cout << "6.我不玩了\n";
         std::cout << "+++++++++++++++++++++\n";
 
@@ -191,7 +327,7 @@ void town (Character &player){
                 break;
             case 2:
                 std::cout << "正在前往小溪！\n";
-                fishing(player);
+                fishing(player,rod);
                 break;
             case 3:
                 std::cout << "战斗系统仍在开发中，敬请期待！\n";
@@ -223,8 +359,11 @@ int main(){
     Character player = playerCreateCharacter();
     player.showStatus();
 
+    //创建初始钓鱼竿
+    FishingRod rod(10, 1, 50, 0);
+
     // 进入城镇
-    town(player);
+    town(player,rod);
 
     return 0;
 }
