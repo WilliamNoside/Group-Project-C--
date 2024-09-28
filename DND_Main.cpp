@@ -19,6 +19,7 @@
 目前进度
 */
 
+//背包类
 class Package{
     private:
         std::map<std::string, int> items;  // 物品名称,数量
@@ -64,6 +65,7 @@ class Package{
         }
 };
 
+//角色类
 class Character{
     public:
         std::string Name; //名字
@@ -111,6 +113,7 @@ class Character{
         }
 };
 
+//钓鱼竿类
 class FishingRod{
     public:
         int maxDurability;//最大耐久度
@@ -169,6 +172,7 @@ class FishingRod{
     
 };
 
+//角色类，创建角色模块
 Character playerCreateCharacter(){
     std::string playerName;
     int choice;
@@ -195,6 +199,7 @@ Character playerCreateCharacter(){
     }
 };
 
+//钓鱼奖励模块
 std::string fishReward(FishingRod &rod){
     const char* garbage[] = {"旧报纸" , "破眼镜" , "垃圾" , "可乐罐" , "破布"};
     const char* commonFish[] = {"金鱼" , "鲤鱼" , "鲈鱼" , "鲢鱼" , "草鱼"};
@@ -217,6 +222,7 @@ std::string fishReward(FishingRod &rod){
         return treasure[i];}
 }
 
+//钓鱼模块
 void fishing (Character &player , FishingRod &rod){
     char choice;
     //准备钓鱼
@@ -298,6 +304,7 @@ void fishing (Character &player , FishingRod &rod){
     }while (choice == 'y' || choice == 'Y');
 }
 
+//小镇模块
 void town (Character &player , FishingRod &rod){
     int move;
     do{
@@ -351,6 +358,7 @@ void town (Character &player , FishingRod &rod){
     }while (move != 6);
 };
 
+//Main方法
 int main(){
     //随机数种子
     srand(time(NULL));
