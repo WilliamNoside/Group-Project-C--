@@ -5,26 +5,88 @@
 # include <thread> 
 # include <map>
 
-
 /*
 角色数据需要拥有HP和MP，金币Coins。 ✅
 角色开局选择需要询问是想玩战士，法师还是游侠，来确定初始数值 ✅
-角色会被要求进行一项任务，达成目标即可获得胜利
-在城镇中，你可以在四个不同的领域展开行动，
+角色会被要求进行一项任务，达成目标即可获得胜利 ✅
+在城镇中，你可以在四个不同的领域展开行动，✅
 在城镇里你可以进行不同的行动 ✅
-钓鱼：在钓鱼小游戏中随机获取一个鱼
+钓鱼：在钓鱼小游戏中随机获取一个鱼 ✅
+- 钓鱼图鉴 ✅
+- 钓鱼背包 ✅
+- 钓鱼时间 ✅
+- 钓鱼结局 ✅
 商店：售卖你的鱼或战利品，购买提升你的能力
-许愿：用钱向河神许愿，随机获得或失去钱
+- 
+许愿：用钱向河神许愿，随机获得或失去钱 
+- 
 战斗：在回合制战斗中磨练你的能力
+- 
 目前进度
 */
+
+//图鉴类
+class FishCatalog{
+    private:
+        std::map<std::string, bool> fishLog;  // 每种鱼的名字且是否钓到
+    public:
+        FishCatalog(){
+            //初始化图鉴，false为未钓到
+            fishLog.insert(std::make_pair("金鱼", false));
+            fishLog.insert(std::make_pair("鲤鱼", false));
+            fishLog.insert(std::make_pair("鲈鱼", false));
+            fishLog.insert(std::make_pair("鲢鱼", false));
+            fishLog.insert(std::make_pair("草鱼", false));
+            fishLog.insert(std::make_pair("大马哈鱼", false));
+            fishLog.insert(std::make_pair("金枪鱼", false));
+            fishLog.insert(std::make_pair("河豚", false));
+        }
+
+
+        // 玩家钓到鱼后更新图鉴
+        void catchFish(const std::string &fishName){
+            if (fishLog.count(fishName)) {
+                fishLog[fishName] = true;
+                std::cout << "你写进了图鉴！\n";
+            }
+        }
+
+        // 图鉴显示
+        void showCatalog() const {
+            std::cout << "*****钓鱼图鉴*****\n";
+            for (const auto& entry : fishLog){
+                std::cout << entry.first << " : " << (entry.second ? "已钓到" : "未钓到") << '\n';
+            }
+        }
+        
+        // 图鉴进度显示
+        void showProgress() const {
+            int caught = 0;
+            int total = fishLog.size();
+            for (const auto & entry  : fishLog) {
+                if (entry.second) {
+                    caught++;
+                }
+            }
+            std::cout << "已钓到鱼的数量: " << caught << " / " << total << '\n';
+        }
+
+        //全收集判定
+        bool allFishCaught() const {
+            for (const auto & entry : fishLog) {
+                if(!entry.second){
+                    return false;
+                }
+            }
+            return true;
+        }
+};
 
 //背包类
 class Package{
     private:
         std::map<std::string, int> items;  // 物品名称,数量
     public:
-
         //添加物品
         void addItem(const std::string & itemName, int quantity = 1){
             items[itemName] += quantity;
@@ -74,6 +136,8 @@ class Character{
         int MP; //智慧
         int Coins; //金币
         Package package;//背包
+        FishCatalog fishCatalog;//图鉴
+        bool hasGoldenRod = false;
         
         // 初始化角色数值，在定义怪物和初始角色时使用。
 
@@ -86,7 +150,6 @@ class Character{
         }
 
         // 显示角色数据
-
         void showStatus(){
             std::cout << Classname << Name << "你好\n";
             std::cout << "你的HP为" << HP << "，这决定了你的攻击力和生命值\n";
@@ -110,6 +173,35 @@ class Character{
         // 检查物品
         bool hasItem(const std::string & itemName, int quantity = 1) const {
             return package.hasItem(itemName, quantity);
+        }
+
+        // 图鉴类整合进角色类
+
+        // 钓鱼后更新图鉴
+        void catchFish(const std::string& fishName) {
+            fishCatalog.catchFish(fishName);
+            if (fishCatalog.allFishCaught()) {
+                getGoldenRod();  // 授予金色钓竿
+                fishingendGame();   //达成钓鱼结局
+            }
+        }
+
+        // 授予金色钓竿
+        void getGoldenRod() {
+            hasGoldenRod = true;
+            std::cout << "恭喜你！你钓上了所有的鱼，你的钓竿突然飞了起来，变成了金色钓竿！游戏结束！\n";
+        }
+
+        // 结束游戏
+        void fishingendGame() {
+            std::cout << "你完成了钓鱼结局！恭喜你，你是天生的钓鱼大师！\n " ;
+            
+        }
+
+        // 展示图鉴
+        void viewCatalog() const {
+            fishCatalog.showCatalog();
+            fishCatalog.showProgress();
         }
 };
 
@@ -235,7 +327,7 @@ void fishing (Character &player , FishingRod &rod){
         }
 
         //开始钓鱼
-        std::cout << "______________\n";
+        std::cout << "--------------\n";
         std::cout << "开始钓鱼！\n";
         rod.decreaseDurability(); //耐久度减少
         rod.showDurability(); //显示钓鱼竿数据
@@ -261,12 +353,15 @@ void fishing (Character &player , FishingRod &rod){
             if (std::cin >> input && input == 'f'){
                 success = true;
                 break;
+            }else{
+                success = true;
             }
         }
 
         //根据Success变量判断是否上钩
         if(success){
             std::string fishResult = fishReward(rod);
+            std::cout << "====================" << "\n";
             std::cout << "恭喜！你钓到了: " << fishResult << "！\n";
 
             //判定战利品，并给予奖励
@@ -279,25 +374,32 @@ void fishing (Character &player , FishingRod &rod){
             }else if(fishResult == "金鱼"|| fishResult == "鲤鱼"){
                 std::cout << "小鱼也是鱼！\n";
                 player.addItemToPackage(fishResult); 
+                player.catchFish(fishResult);
             }else if(fishResult == "鲈鱼"){
                 std::cout << "是鲈鱼不是鱼露\n";
                 player.addItemToPackage(fishResult); 
+                player.catchFish(fishResult);
             }else if(fishResult == "鲢鱼"|| fishResult == "草鱼"){
                 std::cout << "钓鱼佬永不空军！\n";
                 player.addItemToPackage(fishResult); 
+                player.catchFish(fishResult);
             }else if(fishResult == "大马哈鱼"|| fishResult == "金枪鱼"){
                 std::cout << "好大一条鱼！\n";
                 player.addItemToPackage(fishResult); 
+                player.catchFish(fishResult);
             }else if(fishResult == "河豚"){
                 std::cout << "小心别被扎到了！\n";
                 player.addItemToPackage(fishResult); 
+                player.catchFish(fishResult);
             }else if(fishResult == "宝藏箱"||fishResult == "古代项链"||fishResult == "金戒指"){
                 std::cout << "哇，发财！\n";
                 player.Coins += 200;
-            }else{
+            }
+        }
+        else{
+            std::cout << "==============\n";
             std::cout << "哎呀，鱼跑掉了！\n";
         }
-    }
         //继续钓鱼判定
         std::cout << "是否继续钓鱼？(y/n): \n";
         std::cin >> choice;
@@ -305,7 +407,7 @@ void fishing (Character &player , FishingRod &rod){
 }
 
 //小镇模块
-void town (Character &player , FishingRod &rod){
+void town (Character &player , FishingRod & rod){
     int move;
     do{
         std::cout << "++++++++++++++++++++\n";
@@ -313,10 +415,11 @@ void town (Character &player , FishingRod &rod){
         std::cout << "++++++++++++++++++++\n";
         std::cout << "1.商店\n";
         std::cout << "2.钓鱼\n";
-        std::cout << "3.前去郊外\n";
-        std::cout << "4.许愿\n";
+        std::cout << "3.钓鱼图鉴\n";
+        std::cout << "4.前去郊外\n";
         std::cout << "5.查看背包和状态\n";
-        std::cout << "6.我不玩了\n";
+        std::cout << "6.许愿\n";
+        std::cout << "7.我不玩了\n";
         std::cout << "+++++++++++++++++++++\n";
 
         //移动
@@ -337,17 +440,20 @@ void town (Character &player , FishingRod &rod){
                 fishing(player,rod);
                 break;
             case 3:
-                std::cout << "战斗系统仍在开发中，敬请期待！\n";
-                //battling(player);
+                player.viewCatalog();
                 break;
             case 4:
-                std::cout << "许愿系统仍在开发中，敬请期待！\n";
-                //wish(player);
+                std::cout << "战斗系统仍在开发中，敬请期待！\n";
+                //battling(player);
                 break;
             case 5:
                 player.showStatus();
                 break;
             case 6:
+                std::cout << "许愿系统仍在开发中，敬请期待！\n";
+                //wish(player);
+                break;
+            case 7:
                 std::cout << "下次再玩！\n";
                 std::cout << "+++++++++++++++++++++\n";
                 break;
@@ -355,7 +461,7 @@ void town (Character &player , FishingRod &rod){
                 std::cout << "请输入有效的数字！\n" ;
                 break;
         }
-    }while (move != 6);
+    }while (move != 7);
 };
 
 //Main方法
