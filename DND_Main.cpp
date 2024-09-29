@@ -4,6 +4,7 @@
 # include <chrono> 
 # include <thread> 
 # include <map>
+# include <future> 
 
 /*
 角色数据需要拥有HP和MP，金币Coins。 ✅
@@ -195,7 +196,7 @@ class Character{
         // 结束游戏
         void fishingendGame() {
             std::cout << "你完成了钓鱼结局！恭喜你，你是天生的钓鱼大师！\n " ;
-            
+            exit(0);
         }
 
         // 展示图鉴
@@ -318,9 +319,8 @@ std::string fishReward(FishingRod &rod){
 void fishing (Character &player , FishingRod &rod){
     char choice;
     //准备钓鱼
-    std::cout << player.Name << "来到了河边，准备钓鱼！\n ";
+    std::cout << player.Name << "来到了河边，准备钓鱼!\n";
     do {
-
         if(rod.isBroken()){
             std::cout << "你的钓竿坏了，快去修修吧！";
             break;
@@ -344,16 +344,18 @@ void fishing (Character &player , FishingRod &rod){
         std::cout << "鱼上钩了！快在两秒内按下'f'键来拉钩！\n";
 
         //咬勾时间
-        auto startTime = std::chrono::high_resolution_clock::now();
-        char input;
+        std::future<char> inputFuture = std::async(std::launch::async, []() {
+            char input;
+            std::cin >> input;
+            return input;
+        });
+
         bool success = false;
 
         //咬勾循环，两秒内若没有输入F则失败，输入则成功
-        while((std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - startTime).count() < 2) ){
-            if (std::cin >> input && input == 'f'){
-                success = true;
-                break;
-            }else{
+        if (inputFuture.wait_for(std::chrono::seconds(2)) == std::future_status::ready) {
+            char input = inputFuture.get();
+            if (input == 'f' || input == 'F') {
                 success = true;
             }
         }
