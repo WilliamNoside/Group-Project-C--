@@ -276,32 +276,63 @@ class FishingRod{
 class Shop {
 public:
     // 商品价格
-    const int FISH_SELL_PRICE = 10;  // 鱼的出售价格
+    const int FISH_SELL_PRICE = 50;  // 鱼的出售价格
     const int UPGRADE_COST = 50;      // 升级钓竿的费用
 
     // 售卖鱼
     void sellFish(Character &player) {
+        // 让玩家选择想要出售的鱼
         std::string fishName;
         std::cout << "请输入你想出售的鱼的名字: ";
         std::cin >> fishName;
 
+        // 检查背包中是否有该鱼
         if (player.hasItem(fishName)) {
-            player.moveItemFromPackage(fishName);
-            player.Coins += FISH_SELL_PRICE;
-            std::cout << "成功出售 " << fishName << "，获得金币 " << FISH_SELL_PRICE << "！\n";
+            if(fishName == "鲈鱼" || fishName == "鲢鱼" || fishName == "草鱼"){
+                player.moveItemFromPackage(fishName);// 移除普通鱼
+                player.Coins += FISH_SELL_PRICE * 2; // 获得金币
+                std::cout << "你卖掉了" << fishName << "，获得了" << FISH_SELL_PRICE * 2 << "金币。\n";
+            }else if(fishName == "大马哈鱼" || fishName == "金枪鱼" || fishName == "河豚"){
+                player.moveItemFromPackage(fishName);// 移除稀有鱼
+                player.Coins += FISH_SELL_PRICE * 5; // 获得金币
+                std::cout << "你卖掉了" << fishName << "，获得了" << FISH_SELL_PRICE * 5 << "金币。\n";
+            }else{
+                player.moveItemFromPackage(fishName);// 移除小鱼
+                player.Coins += FISH_SELL_PRICE; // 获得金币
+                std::cout << "你卖掉了" << fishName << "，获得了" << FISH_SELL_PRICE << "金币。\n";
+            } 
         } else {
             std::cout << "背包中没有 " << fishName << "！\n";
         }
     }
 
+    // 修理钓鱼竿
+    void repairFishingRod(FishingRod &rod, Character &player) {
+
+        std::cout << "花费 30 金币修理钓鱼竿。\n";
+
+        // 花费 30 金币修理钓鱼竿，如果没有足够的金币则无法修理。
+        if (player.Coins >= 30) {
+            rod.repair();
+            player.Coins -= 30;
+            std::cout << "钓鱼竿修理成功！花费了 30 金币！\n";
+            std::cout << "钓鱼竿耐久度恢复至 " << rod.durability << "/" << rod.maxDurability << '\n';
+        }else{
+            std::cout << "金币不足，无法修理钓鱼竿。\n";
+        }
+    }
     // 升级钓鱼竿
     void upgradeFishingRod(FishingRod &rod, Character &player) {
+
+        std::cout << "你需要花费 " << UPGRADE_COST << " 金币来升级鱼竿。\n";
+
+        // 升级钓鱼竿需要花费 50 或更多的 金币，如果没有足够的金币则无法升级。
         if (player.Coins >= UPGRADE_COST) {
             player.Coins -= UPGRADE_COST;
-            rod.upgradeCost += 20; // 升级费用递增
+            rod.upgradeCost += 50;  // 升级费用递增
             rod.maxDurability += 5; // 最大耐久度增加
             rod.level++;            // 钓鱼竿等级提升
-            std::cout << "钓鱼竿升级成功！新等级: " << rod.level << ", 新耐久度: " << rod.maxDurability << ".\n";
+            std::cout << "钓鱼竿升级成功！等级: " << rod.level << ", 新耐久度: " << rod.maxDurability << ".\n";
         } else {
             std::cout << "金币不足，无法升级钓鱼竿。\n";
         }
@@ -311,25 +342,35 @@ public:
     void shopInterface(Character &player, FishingRod &rod) {
         int choice;
         do {
+            std::cout << "============\n";
             std::cout << "欢迎来到商店！\n";
             std::cout << "1. 出售鱼\n";
             std::cout << "2. 升级钓鱼竿\n";
-            std::cout << "3. 购买黄金鱼竿\n";
-            std::cout << "4. 退出商店\n";
+            std::cout << "3. 升级钓鱼竿\n";
+            std::cout << "4. 购买黄金鱼竿\n";
+            std::cout << "5. 退出商店\n";
+            std::cout << "============\n"; 
             std::cin >> choice;
 
-            //清理缓冲区，避免错误
+            //清理缓冲区
             std::cin.clear();
             fflush(stdin);
 
             switch (choice) {
                 case 1:
+                    // 出售鱼
                     sellFish(player);
                     break;
                 case 2:
+                    // 升级钓鱼竿
                     upgradeFishingRod(rod, player);
                     break;
                 case 3:
+                    // 修理钓鱼竿
+                    repairFishingRod(rod, player);
+                    break;
+                case 4:
+                    // 购买黄金鱼竿
                     if (player.Coins >= 1000) {
                         player.Coins -= 1000;
                         rod.level = 10;
@@ -340,15 +381,17 @@ public:
                     }else{
                         std::cout << "金币不足，无法购买黄金鱼竿。\n";
                     }
-                case 4:
+                case 5:
+                    // 退出商店
                     std::cout << "感谢光临！\n";
                     break;
                 
                 default:
+                    // 输入错误
                     std::cout << "请输入有效的选项！\n";
                     break;
             }
-        } while (choice != 4);
+        } while (choice != 5); // 循环到退出商店
     }
 };
 
@@ -497,13 +540,15 @@ void fishing (Character &player , FishingRod &rod){
 
 //许愿模块
 void wish(Character &player) {
+        // 随机数种子
+        srand(time(NULL));
         char choice;
-        bool goldfishingrod = false;
-
+        // 开始许愿
         do {
             if (player.Coins <= 0) {
                 std::cout << player.Name << "你来到河边，向河神许愿，河神并没有出现！\n";
                 break;
+                player.Coins = 0;
             } else {
                 std::cout << player.Name << "你来到河边，向河神许愿，河神出现！\n";
                 player.Coins -= 10; 
@@ -543,7 +588,7 @@ void wish(Character &player) {
                         break;
                     case 8:
                         std::cout << "你向河神许愿，商店打折！\n";
-                        player.Coins += 30;
+                        player.Coins *2;
                         break;
                     case 9:
                         std::cout << "你向河神许愿，商店加价！\n";
