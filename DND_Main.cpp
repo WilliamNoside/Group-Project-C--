@@ -91,7 +91,7 @@ class Package{
         //添加物品
         void addItem(const std::string & itemName, int quantity = 1){
             items[itemName] += quantity;
-            std::cout << "你讲一个" << quantity << "个" << itemName << "收到了背包\n";
+            std::cout << "你将一个" << quantity << "个" << itemName << "收到了背包\n";
         }
 
         //移除物品
@@ -167,13 +167,16 @@ class Character{
         }
 
         // 移除物品
-        bool useItemFromPackage(const std::string & itemName, int quantity = 1) {
+        bool moveItemFromPackage(const std::string & itemName, int quantity = 1) {
             return package.removeItem(itemName, quantity);
         }
         
         // 检查物品
         bool hasItem(const std::string & itemName, int quantity = 1) const {
             return package.hasItem(itemName, quantity);
+        }
+        void showPackage(){
+            package.showPackage();  // 显示背包内容
         }
 
         // 图鉴类整合进角色类
@@ -203,7 +206,7 @@ class Character{
         void viewCatalog() const {
             fishCatalog.showCatalog();
             fishCatalog.showProgress();
-        }
+        }   
 };
 
 //钓鱼竿类
@@ -262,7 +265,86 @@ class FishingRod{
         void showDurability() {
         std::cout << "钓鱼竿等级: " << level << ",钓鱼竿耐久度: " << durability << "/" << maxDurability << '\n';
     }
-    
+};
+
+//商店类
+class Shop {
+public:
+    // 商品价格
+    const int FISH_SELL_PRICE = 10;  // 鱼的出售价格
+    const int UPGRADE_COST = 50;      // 升级钓竿的费用
+
+    // 售卖鱼
+    void sellFish(Character &player) {
+        std::string fishName;
+        std::cout << "请输入你想出售的鱼的名字: ";
+        std::cin >> fishName;
+
+        if (player.hasItem(fishName)) {
+            player.moveItemFromPackage(fishName);
+            player.Coins += FISH_SELL_PRICE;
+            std::cout << "成功出售 " << fishName << "，获得金币 " << FISH_SELL_PRICE << "！\n";
+        } else {
+            std::cout << "背包中没有 " << fishName << "！\n";
+        }
+    }
+
+    // 升级钓鱼竿
+    void upgradeFishingRod(FishingRod &rod, Character &player) {
+        if (player.Coins >= UPGRADE_COST) {
+            player.Coins -= UPGRADE_COST;
+            rod.upgradeCost += 20; // 升级费用递增
+            rod.maxDurability += 5; // 最大耐久度增加
+            rod.level++;            // 钓鱼竿等级提升
+            std::cout << "钓鱼竿升级成功！新等级: " << rod.level << ", 新耐久度: " << rod.maxDurability << ".\n";
+        } else {
+            std::cout << "金币不足，无法升级钓鱼竿。\n";
+        }
+    }
+
+    // 商店主界面
+    void shopInterface(Character &player, FishingRod &rod) {
+        int choice;
+        do {
+            std::cout << "欢迎来到商店！\n";
+            std::cout << "1. 出售鱼\n";
+            std::cout << "2. 升级钓鱼竿\n";
+            std::cout << "3. 购买黄金鱼竿\n";
+            std::cout << "4. 退出商店\n";
+            std::cin >> choice;
+
+            //清理缓冲区，避免错误
+            std::cin.clear();
+            fflush(stdin);
+
+            switch (choice) {
+                case 1:
+                    sellFish(player);
+                    break;
+                case 2:
+                    upgradeFishingRod(rod, player);
+                    break;
+                case 3:
+                    if (player.Coins >= 1000) {
+                        player.Coins -= 1000;
+                        rod.level = 10;
+                        rod.maxDurability = 100;
+                        std::cout << "购买成功！你的太有实力了，恭喜你通过了黄金鱼竿的考验！\n";
+                        std::cout << "感谢游玩，游戏结束\n";
+                        exit(0);
+                    }else{
+                        std::cout << "金币不足，无法购买黄金鱼竿。\n";
+                    }
+                case 4:
+                    std::cout << "感谢光临！\n";
+                    break;
+                
+                default:
+                    std::cout << "请输入有效的选项！\n";
+                    break;
+            }
+        } while (choice != 4);
+    }
 };
 
 //角色类，创建角色模块
@@ -408,9 +490,95 @@ void fishing (Character &player , FishingRod &rod){
     }while (choice == 'y' || choice == 'Y');
 }
 
+//许愿模块
+void wish(Character &player) {
+        char choice;
+        bool goldfishingrod = false;
+
+        do {
+            if (player.Coins <= 0) {
+                std::cout << player.Name << "你来到河边，向河神许愿，河神并没有出现！\n";
+                break;
+            } else {
+                std::cout << player.Name << "你来到河边，向河神许愿，河神出现！\n";
+                player.Coins -= 10; 
+                int num = (rand() % 20) + 1; 
+                
+                switch (num) {
+                    case 1:
+                        std::cout << "你向河神许愿，获得了一些钱！\n";
+                        player.Coins += 50;
+                        break;
+                    case 2:
+                        std::cout << "你向河神许愿，失去了一些钱！\n";
+                        player.Coins -= 50;
+                        break;
+                    case 3:
+                        std::cout << "你向河神许愿，什么都没有获得！\n";
+                        break;
+                    case 4:
+                        std::cout << "你向河神许愿，喝了一口核废水！\n";
+                        player.HP -= 10;
+                        std::cout << "你的生命值为" << player.HP << "。\n";
+                        break;
+                    case 5:
+                        std::cout << "你向河神许愿，河神给了你祝福！\n";
+                        player.MP += 30;
+                        std::cout << "你的法术值为" << player.MP << "。\n";
+                        break;
+                    case 6:
+                        std::cout << "你向河神许愿，河神给了你诅咒！\n";
+                        player.MP -= 10;
+                        std::cout << "你的法术值为" << player.MP << "。\n";
+                        break;
+                    case 7:
+                        std::cout << "你向河神许，获得了一个蛋！\n";
+                        player.HP += 10;
+                        std::cout << "你的生命值为" << player.HP << "。\n";
+                        break;
+                    case 8:
+                        std::cout << "你向河神许愿，商店打折！\n";
+                        player.Coins += 30;
+                        break;
+                    case 9:
+                        std::cout << "你向河神许愿，商店加价！\n";
+                        player.Coins -= 30;
+                        break;    
+                    case 10:
+                        std::cout << "你向河神许愿，获得垃圾！\n";
+                        break;
+                    case 11:
+                        std::cout << "你向河神许愿，获得了金币！\n";
+                        player.Coins += 30;
+                        break;   
+                    case 12:
+                        std::cout << "你向河神许愿，获得银币！\n";
+                        player.Coins += 20;
+                        break;         
+                    case 13:
+                        std::cout << "你向河神许愿，获得铜币！\n";
+                        player.Coins += 10;
+                        break;    
+                    case 14:
+                        std::cout << "你向河神许愿，什么都没有获得！\n";
+                        break;
+                    case 15:
+                        std::cout << "你向河神许愿，获得了黄金鱼竿！\n";
+                        std::cout << "恭喜你，你获得了胜利!\n";
+                        exit(0);
+                }
+            }
+            std::cout << "当前金币数量: " << player.Coins << "\n";
+            std::cout << "是否继续许愿？(y/n): ";
+            std::cin >> choice;
+        } while (choice == 'y' || choice == 'Y');
+    }
+
+
 //小镇模块
 void town (Character &player , FishingRod & rod){
     int move;
+    Shop shop;
     do{
         std::cout << "++++++++++++++++++++\n";
         std::cout << "你现在在鲈鱼镇中，请选择你接下来要去干什么\n";
@@ -434,8 +602,7 @@ void town (Character &player , FishingRod & rod){
         //检测移动，并执行
         switch(move){
             case 1:
-                std::cout << "商店系统仍在开发中，敬请期待！\n";
-                //shoping(player);
+                shop.shopInterface(player, rod); // 进入商店
                 break;
             case 2:
                 std::cout << "正在前往小溪！\n";
@@ -452,8 +619,7 @@ void town (Character &player , FishingRod & rod){
                 player.showStatus();
                 break;
             case 6:
-                std::cout << "许愿系统仍在开发中，敬请期待！\n";
-                //wish(player);
+                wish(player);
                 break;
             case 7:
                 std::cout << "下次再玩！\n";
@@ -466,6 +632,7 @@ void town (Character &player , FishingRod & rod){
     }while (move != 7);
 };
 
+
 //Main方法
 int main(){
     //随机数种子
@@ -474,6 +641,9 @@ int main(){
     //角色创建模块
     Character player = playerCreateCharacter();
     player.showStatus();
+
+    // 故事剧情
+    std::cout << "下次再玩！\n";
 
     //创建初始钓鱼竿
     FishingRod rod(10, 1, 50, 0);
