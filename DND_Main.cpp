@@ -551,7 +551,7 @@ void wish(Character &player) {
                 player.Coins = 0;
             } else {
                 std::cout << player.Name << "你来到河边，向河神许愿，河神出现！\n";
-                player.Coins -= 10; 
+                player.Coins -= 50; 
                 int num = (rand() % 20) + 1; 
                 
                 switch (num) {
@@ -582,13 +582,13 @@ void wish(Character &player) {
                         std::cout << "你的法术值为" << player.MP << "。\n";
                         break;
                     case 7:
-                        std::cout << "你向河神许，获得了一个蛋！\n";
+                        std::cout << "你向河神许愿，获得了一个蛋！\n";
                         player.HP += 10;
                         std::cout << "你的生命值为" << player.HP << "。\n";
                         break;
                     case 8:
                         std::cout << "你向河神许愿，商店打折！\n";
-                        player.Coins *2;
+                        player.Coins *= 2 ;
                         break;
                     case 9:
                         std::cout << "你向河神许愿，商店加价！\n";
@@ -616,6 +616,9 @@ void wish(Character &player) {
                         std::cout << "你向河神许愿，获得了黄金鱼竿！\n";
                         std::cout << "恭喜你，你获得了胜利!\n";
                         exit(0);
+                    default:
+                        std::cout << "你向河神许愿，什么都没有获得！\n";
+                        break;
                 }
             }
             std::cout << "当前金币数量: " << player.Coins << "\n";
@@ -698,7 +701,7 @@ int main(){
     char choice;
     std::cin >> choice;
 
-    
+    //清理缓存区
     std::cin.clear();
     fflush(stdin);
 
