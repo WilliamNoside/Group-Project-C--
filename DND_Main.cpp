@@ -402,7 +402,7 @@ Character playerCreateCharacter(){
     
     //让玩家选择名字
     std::cout << "你的名字是什么？\n";
-    std::cin >> playerName;
+    std::getline(std::cin , playerName);
 
     //让玩家选择职业
     std::cout << "请选择你的职业！\n";
@@ -413,12 +413,14 @@ Character playerCreateCharacter(){
     //选择职业并设定初始数值
     if (choice == 1) {
         return Character(playerName,"战士", 180 , 30 , 50); //战士拥有高力量 低智慧
-    }else if (choice == 3) {
-        return Character(playerName,"法师", 80 , 150 , 50); //法师拥有低力量 高智慧
     }else if (choice == 2) {
         return Character(playerName,"游侠", 100 , 60 , 50); //游侠拥有中力量 中智慧
-    }else {
+    }else if (choice == 3) {
+        return Character(playerName,"法师", 80 , 150 , 50); //法师拥有低力量 高智慧
+    }else if (choice == 4){
         return Character(playerName,"商人", 80 , 30 , 300); //商人拥有中力量 低智慧
+    }else{
+        return Character(playerName,"乞丐", 60 , 60 , 50); //乞丐拥有低力量 低智慧
     }
 };
 
@@ -546,11 +548,11 @@ void wish(Character &player) {
         // 开始许愿
         do {
             if (player.Coins <= 0) {
-                std::cout << player.Name << "你来到河边，向河神许愿，河神并没有出现！\n";
+                std::cout << player.Name << "来到河边，向河神许愿，河神并没有出现！\n";
                 break;
                 player.Coins = 0;
             } else {
-                std::cout << player.Name << "你来到河边，向河神许愿，河神出现！\n";
+                std::cout << player.Name << "来到河边，向河神许愿，河神出现！\n";
                 player.Coins -= 50; 
                 int num = (rand() % 20) + 1; 
                 
